@@ -1,0 +1,12 @@
+{
+  "domain": "",
+  "smtp_host": "",
+  "smtp_port": 587,
+  "smtp_user": "",
+  "smtp_pass": "",
+  "from_email": "",
+  "to_email": "",
+  "check_interval_hours": 2,
+  "notify_interval_hours": 24,
+  "notify_days": 3
+}

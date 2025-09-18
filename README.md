@@ -63,3 +63,20 @@ All events, including domain checks, email notifications, and errors, are logged
 2.  Saved to a `watcher.log` file in the project directory.
 
 This allows you to have a persistent record of the watcher's activity.
+
+---
+
+## 💻 Building the Executable
+
+To create a standalone Windows executable (`.exe`), `pyinstaller` is used. The necessary packages are listed in `requirements.txt`.
+
+1.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+2.  **Run the build command:**
+    ```bash
+    python -m PyInstaller --onefile --add-data "config.json;." domain-watcher.py
+    ```
+3.  **Find the executable:**
+    The generated `domain-watcher.exe` file will be located in the `dist` directory.

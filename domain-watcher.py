@@ -3,6 +3,7 @@ import whois
 import smtplib
 import datetime
 import json
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -36,21 +37,21 @@ class DomainWatcher:
                 server.starttls()
                 server.login(self.smtp_user, self.smtp_pass)
                 server.sendmail(self.from_email, self.to_email, msg.as_string())
-            print(f"[{datetime.datetime.now()}] Mail gönderildi!")
+            logging.info("Mail gönderildi!")
         except Exception as e:
-            print(f"[{datetime.datetime.now()}] Mail gönderilemedi: {e}")
+            logging.error(f"Mail gönderilemedi: {e}")
 
     def check_domain(self):
         try:
             w = whois.whois(self.domain)
             if w.domain_name is None:
-                print(f"[{datetime.datetime.now()}] {self.domain} ALINABİLİR (Available)")
+                logging.info(f"{self.domain} ALINABİLİR (Available)")
                 self.domain_available = True
             else:
-                print(f"[{datetime.datetime.now()}] {self.domain} HENÜZ DOLMAMIŞ (Not Available) (Expire: {w.expiration_date})")
+                logging.info(f"{self.domain} HENÜZ DOLMAMIŞ (Not Available) (Expire: {w.expiration_date})")
                 self.domain_available = False
         except Exception as e:
-            print(f"[{datetime.datetime.now()}] {self.domain} ALINABİLİR olabilir (Available) (Hata: {e})")
+            logging.warning(f"{self.domain} ALINABİLİR olabilir (Available) (Hata: {e})")
             self.domain_available = True
 
     def maybe_notify(self):
@@ -72,14 +73,28 @@ class DomainWatcher:
             self.notifications_sent += 1
 
     def run(self):
+        logging.info("Domain Watcher başlatıldı. İlk kontrol yapılıyor...")
+        self.check_domain()
+        self.maybe_notify()
+
         while True:
-            print(f"[{datetime.datetime.now()}] Domain kontrol ediliyor...")
+            logging.info(f"Sonraki kontrol {self.check_interval_hours} saat sonra.")
+            time.sleep(self.check_interval_hours * 3600)
+            logging.info("Domain kontrol ediliyor...")
             self.check_domain()
             self.maybe_notify()
-            time.sleep(self.check_interval_hours * 3600)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler("watcher.log", encoding="utf-8"),
+            logging.StreamHandler()
+        ]
+    )
+
     with open("config.json", "r", encoding="utf-8") as f:
         config = json.load(f)
 

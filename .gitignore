@@ -1,2 +1,7 @@
 config.json
 watcher.log
+
+# PyInstaller
+build/
+dist/
+*.spec

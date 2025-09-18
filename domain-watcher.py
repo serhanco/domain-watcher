@@ -4,8 +4,20 @@ import smtplib
 import datetime
 import json
 import logging
+import sys
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+
+def get_base_path():
+    """Get the base path for data files, whether running as a script or frozen executable."""
+    if getattr(sys, 'frozen', False):
+        # The application is running as a bundled executable.
+        return os.path.dirname(sys.executable)
+    else:
+        # The application is running as a normal Python script.
+        return os.path.dirname(os.path.abspath(__file__))
 
 
 class DomainWatcher:
@@ -86,17 +98,32 @@ class DomainWatcher:
 
 
 if __name__ == "__main__":
+    base_path = get_base_path()
+    log_file_path = os.path.join(base_path, "watcher.log")
+    config_file_path = os.path.join(base_path, "config.json")
+
+    # Check if log file exists to add a creation message
+    log_exists = os.path.exists(log_file_path)
+
     logging.basicConfig(
         level=logging.INFO,
         format="[%(asctime)s] %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler("watcher.log", encoding="utf-8"),
+            logging.FileHandler(log_file_path, encoding="utf-8"),
             logging.StreamHandler()
         ]
     )
 
-    with open("config.json", "r", encoding="utf-8") as f:
-        config = json.load(f)
+    if not log_exists:
+        logging.info("Log dosyası oluşturuldu.")
+
+    try:
+        with open(config_file_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        logging.error(f"AYAR DOSYASI BULUNAMADI: '{config_file_path}'")
+        logging.error("Lütfen 'config.json' dosyasının programla aynı dizinde olduğundan emin olun.")
+        sys.exit(1)
 
     watcher = DomainWatcher(config)
     watcher.run()
